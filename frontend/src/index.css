@@ -1,0 +1,162 @@
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  accent-color: #4f46e5;
+}
+
+/* ==========================================================================
+   LIGHT MODE DESIGN TOKENS (Crisp, solid, high-contrast fintech surfaces)
+   ========================================================================== */
+:root:not(.dark) {
+  --finora-bg: #F8FAFC;
+  --finora-text: #0F172A;
+  --finora-text-muted: #64748B;
+  --finora-card-bg: #FFFFFF;
+  --finora-card-hover: #FFFFFF;
+  --finora-card-border: #E2E8F0;
+  --finora-card-shadow: 0 1px 3px 0 rgba(15, 23, 42, 0.06), 0 1px 2px -1px rgba(15, 23, 42, 0.04);
+  --finora-card-shadow-hover: 0 10px 25px -5px rgba(15, 23, 42, 0.08), 0 8px 10px -6px rgba(15, 23, 42, 0.04);
+  --finora-nav-bg: #FFFFFF;
+  --finora-border-line: #E2E8F0;
+  --finora-input-bg: #F8FAFC;
+  --finora-input-border: #CBD5E1;
+  color-scheme: light;
+}
+
+/* ==========================================================================
+   DARK MODE DESIGN TOKENS (Deep obsidian, sleek slate solid surfaces)
+   ========================================================================== */
+.dark {
+  --finora-bg: #090D16;
+  --finora-text: #F8FAFC;
+  --finora-text-muted: #94A3B8;
+  --finora-card-bg: #0F172A;
+  --finora-card-hover: #131D35;
+  --finora-card-border: #1E293B;
+  --finora-card-shadow: 0 4px 16px 0 rgba(0, 0, 0, 0.4);
+  --finora-card-shadow-hover: 0 12px 30px -4px rgba(0, 0, 0, 0.6);
+  --finora-nav-bg: #0B0F19;
+  --finora-border-line: #1E293B;
+  --finora-input-bg: #090D16;
+  --finora-input-border: #26334D;
+  color-scheme: dark;
+}
+
+body {
+  margin: 0;
+  background-color: var(--finora-bg);
+  color: var(--finora-text);
+  font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overflow-x: hidden;
+  min-height: 100vh;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+/* Crisp Solid Cards (No Glassmorphism) */
+.finora-card {
+  background-color: var(--finora-card-bg);
+  border: 1px solid var(--finora-card-border);
+  box-shadow: var(--finora-card-shadow);
+  border-radius: 1rem;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.finora-card-hover:hover {
+  border-color: #6366F1;
+  box-shadow: var(--finora-card-shadow-hover);
+  transform: translateY(-1px);
+}
+
+/* Solid Top Navbar */
+.finora-navbar, .glass-navbar {
+  background-color: var(--finora-nav-bg);
+  border-bottom: 1px solid var(--finora-border-line);
+  box-shadow: var(--finora-card-shadow);
+}
+
+/* Solid Crisp Inputs */
+.finora-input, .glass-input {
+  background-color: var(--finora-input-bg) !important;
+  border: 1px solid var(--finora-input-border) !important;
+  color: var(--finora-text) !important;
+  transition: all 0.15s ease;
+}
+
+.finora-input:focus, .glass-input:focus {
+  border-color: #6366F1 !important;
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+}
+
+/* High Contrast Status Badges */
+.badge-healthy {
+  background-color: rgba(16, 185, 129, 0.1);
+  color: #047857;
+  border: 1px solid rgba(16, 185, 129, 0.3);
+}
+.dark .badge-healthy {
+  background-color: rgba(16, 185, 129, 0.15);
+  color: #34D399;
+  border-color: rgba(16, 185, 129, 0.3);
+}
+
+.badge-watch {
+  background-color: rgba(245, 158, 11, 0.1);
+  color: #B45309;
+  border: 1px solid rgba(245, 158, 11, 0.3);
+}
+.dark .badge-watch {
+  background-color: rgba(245, 158, 11, 0.15);
+  color: #FBBF24;
+  border-color: rgba(245, 158, 11, 0.3);
+}
+
+.badge-attention {
+  background-color: rgba(239, 68, 68, 0.1);
+  color: #B91C1C;
+  border: 1px solid rgba(239, 68, 68, 0.3);
+}
+.dark .badge-attention {
+  background-color: rgba(239, 68, 68, 0.15);
+  color: #F87171;
+  border-color: rgba(239, 68, 68, 0.3);
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fadeIn {
+  animation: fadeIn 0.25s ease-out forwards;
+}
+
+/* Clean Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--finora-bg);
+}
+
+::-webkit-scrollbar-thumb {
+  background: #CBD5E1;
+  border-radius: 9999px;
+}
+
+.dark ::-webkit-scrollbar-thumb {
+  background: #334155;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #94A3B8;
+}
