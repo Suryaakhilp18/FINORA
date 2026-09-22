@@ -53,8 +53,9 @@ export const WhatIfSimulator: React.FC<WhatIfSimulatorProps> = ({
   const [customPrice, setCustomPrice] = useState<number>(price);
 
   // Audio Debrief State
+  // Audio Debrief State (Supports English, Hinglish & Telugu)
   const [isPlayingAudio, setIsPlayingAudio] = useState<boolean>(false);
-  const [audioLang, setAudioLang] = useState<'en' | 'hi'>('en');
+  const [audioLang, setAudioLang] = useState<'en' | 'hi' | 'te'>('en');
 
   // Behavioral Cooling-off State
   const [coolingOffActive, setCoolingOffActive] = useState<boolean>(false);
@@ -72,15 +73,22 @@ export const WhatIfSimulator: React.FC<WhatIfSimulatorProps> = ({
 
   const activeScenario = scenarios.find((s) => s.id === activeScenarioId) || scenarios[0];
 
-  // Auto-play audio if triggered by 1-Click Judge Demo
+  // Helper to generate Telugu financial audio debrief script
+  const getTeluguScript = () => {
+    if (explanation?.audio_script_telugu) return explanation.audio_script_telugu;
+    const rem = activeScenario?.emergency_buffer_months ?? 0.8;
+    return `ఫినోరా డెసిషన్ డీబ్రీఫ్. ${productName} కోసం ₹${price.toLocaleString('en-IN')} నగదు చెల్లిస్తే, మీ ఎమర్జెన్సీ కుషన్ 3.9 నెలల నుండి ${rem} నెలలకు తగ్గుతుంది. అత్యవసర నిధిని కాపాడుకోవడానికి 6 నెలల ఈఎంఐ లేదా జీతం క్రెడిట్ అయ్యే వరకు వేచి ఉండడం మంచిది.`;
+  };
+
+  // Only trigger audio when explicitly requested by a user query/question
   useEffect(() => {
-    if (autoPlayAudio && explanation?.audio_script) {
+    if (autoPlayAudio) {
       const timer = setTimeout(() => {
-        handleToggleAudio(false);
-      }, 700);
+        handleToggleAudio();
+      }, 600);
       return () => clearTimeout(timer);
     }
-  }, [autoPlayAudio, explanation]);
+  }, [autoPlayAudio]);
 
   // Stop speech synthesis on unmount
   useEffect(() => {
@@ -98,8 +106,8 @@ export const WhatIfSimulator: React.FC<WhatIfSimulatorProps> = ({
     }
   };
 
-  // Text-To-Speech Executive Audio Briefing (Supports English & Hinglish)
-  const handleToggleAudio = (forceLanguageHindi?: boolean) => {
+  // Text-To-Speech Executive Audio Briefing (Supports English, Hinglish & Telugu)
+  const handleToggleAudio = (forceLanguage?: 'en' | 'hi' | 'te') => {
     if (!('speechSynthesis' in window)) {
       alert("Text-to-speech audio is not supported in this browser.");
       return;
@@ -111,21 +119,42 @@ export const WhatIfSimulator: React.FC<WhatIfSimulatorProps> = ({
       return;
     }
 
-    const useHindi = forceLanguageHindi !== undefined ? forceLanguageHindi : (audioLang === 'hi');
-    const scriptToRead = useHindi 
-      ? (explanation?.audio_script_hinglish || explanation?.audio_script || "")
-      : (explanation?.audio_script || "");
+    const lang = forceLanguage || audioLang;
+    let scriptToRead = "";
+    if (lang === 'te') {
+      scriptToRead = getTeluguScript();
+    } else if (lang === 'hi') {
+      scriptToRead = explanation?.audio_script_hinglish || explanation?.audio_script || "";
+    } else {
+      scriptToRead = explanation?.audio_script || "";
+    }
 
     if (!scriptToRead) return;
 
+    window.speechSynthesis.cancel();
     const utterance = new SpeechSynthesisUtterance(scriptToRead);
-    utterance.rate = 1.0;
+    utterance.rate = lang === 'te' ? 0.95 : 1.0;
     utterance.pitch = 1.0;
 
     const voices = window.speechSynthesis.getVoices();
-    const indVoice = voices.find(v => v.lang.includes('en-IN') || v.lang.includes('hi-IN') || v.lang.includes('en-US'));
-    if (indVoice) {
-      utterance.voice = indVoice;
+    if (lang === 'te') {
+      utterance.lang = 'te-IN';
+      const telVoice = voices.find(v => v.lang.includes('te') || v.lang.includes('te-IN') || v.name.toLowerCase().includes('telugu'));
+      if (telVoice) {
+        utterance.voice = telVoice;
+      }
+    } else if (lang === 'hi') {
+      utterance.lang = 'hi-IN';
+      const hiVoice = voices.find(v => v.lang.includes('hi') || v.lang.includes('hi-IN'));
+      if (hiVoice) {
+        utterance.voice = hiVoice;
+      }
+    } else {
+      utterance.lang = 'en-IN';
+      const indVoice = voices.find(v => v.lang.includes('en-IN') || v.lang.includes('en-US'));
+      if (indVoice) {
+        utterance.voice = indVoice;
+      }
     }
 
     utterance.onend = () => setIsPlayingAudio(false);
@@ -358,20 +387,47 @@ export const WhatIfSimulator: React.FC<WhatIfSimulatorProps> = ({
           <div className="flex items-center space-x-2">
             <div className="flex rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-0.5">
               <button
-                onClick={() => setAudioLang('en')}
+                onClick={() => {
+                  setAudioLang('en');
+                  if (isPlayingAudio) {
+                    window.speechSynthesis.cancel();
+                    setIsPlayingAudio(false);
+                  }
+                }}
                 className={`px-2 py-0.5 rounded text-[11px] font-bold ${
-                  audioLang === 'en' ? 'bg-indigo-600 text-white' : 'text-slate-500'
+                  audioLang === 'en' ? 'bg-indigo-600 text-white' : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'
                 }`}
               >
                 English
               </button>
               <button
-                onClick={() => setAudioLang('hi')}
+                onClick={() => {
+                  setAudioLang('hi');
+                  if (isPlayingAudio) {
+                    window.speechSynthesis.cancel();
+                    setIsPlayingAudio(false);
+                  }
+                }}
                 className={`px-2 py-0.5 rounded text-[11px] font-bold ${
-                  audioLang === 'hi' ? 'bg-indigo-600 text-white' : 'text-slate-500'
+                  audioLang === 'hi' ? 'bg-indigo-600 text-white' : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'
                 }`}
               >
                 Hinglish 🇮🇳
+              </button>
+              <button
+                onClick={() => {
+                  setAudioLang('te');
+                  if (isPlayingAudio) {
+                    window.speechSynthesis.cancel();
+                    setIsPlayingAudio(false);
+                  }
+                }}
+                className={`px-2.5 py-0.5 rounded text-[11px] font-bold ${
+                  audioLang === 'te' ? 'bg-indigo-600 text-white shadow-sm' : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'
+                }`}
+                title="తెలుగు వాయిస్ డీబ్రీఫ్ (Telugu Audio Briefing)"
+              >
+                తెలుగు (Telugu) 🇮🇳
               </button>
             </div>
 

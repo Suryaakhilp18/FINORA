@@ -353,6 +353,7 @@ export function getFallbackSimulation(product: string = 'MacBook Air M3 Laptop',
       recommendation_tradeoff: 'Recommended path: Choose the 45-day wait option or 6-month No-Cost EMI to avoid emergency runway shock.',
       audio_script: 'Finora Executive Summary. Paying ₹65,000 upfront today reduces your emergency cushion from 3.9 months to 0.8 months. We recommend either splitting the cost across a 6-month EMI or waiting 45 days for your festival bonus to protect your emergency buffer.',
       audio_script_hinglish: 'Finora Decision Verdict. Agar aap 65,000 rupaye abhi cash me dete hain, to aapka emergency cushion 3.9 months se ghat kar sirf 0.8 months reh jayega. Behtar yeh hoga ki aap 6-month EMI chunein ya 45 din ruk kar festival discount ka intezaar karein.',
+      audio_script_telugu: 'ఫినోరా ఎగ్జిక్యూటివ్ సారాంశం. ఈ రోజు మీరు 65,000 రూపాయలు చెల్లిస్తే, మీ అత్యవసర నిధి 3.9 నెలల నుండి కేవలం 0.8 నెలలకు పడిపోతుంది. అత్యవసర నిధిని రక్షించుకోవడానికి 6 నెలల ఈఎంఐ ఎంచుకోవడం లేదా పండుగ బోనస్ వచ్చే వరకు 45 రోజులు వేచి ఉండడం మంచిది.',
       salary_day_timing: {
         days_to_salary: 9,
         next_salary_date: 'October 10',

@@ -54,7 +54,7 @@ export default function App() {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [autoPlayAudio, setAutoPlayAudio] = useState<boolean>(false);
 
-  const handleSimulationReady = (res: any) => {
+  const handleSimulationReady = (res: any, options?: { triggeredByUserQuestion?: boolean }) => {
     const simResult: WhatIfResponse = {
       product_name: res.parsed_intent?.product || res.product_name || 'Purchase Item',
       price: res.parsed_intent?.amount || res.price || 65000,
@@ -82,6 +82,13 @@ export default function App() {
     setSimulatingProduct(simResult.product_name);
     setSimulatingPrice(simResult.price);
     setStudioMode('simulator');
+    
+    // Voice audio ONLY plays if explicitly triggered by the user asking a question
+    if (options?.triggeredByUserQuestion) {
+      setAutoPlayAudio(true);
+    } else {
+      setAutoPlayAudio(false);
+    }
   };
 
   // Initialize data
@@ -100,14 +107,14 @@ export default function App() {
       setTransactions(txnsData);
       setInsights(insightsData);
       
-      // Auto-run initial simulation for canonical laptop scenario
+      // Auto-run initial simulation for canonical laptop scenario WITHOUT audio
       if (!activeSimulation) {
         const initialSim = await ApiService.simulateWhatIf({
           product_name: 'MacBook Air M3 Laptop',
           price: 65000,
           query: 'Can I afford a ₹65,000 laptop?'
         }, userId);
-        handleSimulationReady(initialSim);
+        handleSimulationReady(initialSim, { triggeredByUserQuestion: false });
       }
     } catch (err) {
       console.error('Error loading financial state:', err);
@@ -118,11 +125,9 @@ export default function App() {
     loadUserData();
   }, []);
 
-  const handleInstantDemo = async (options?: { autoPlayAudio?: boolean }) => {
+  const handleInstantDemo = async () => {
     setIsLoading(true);
-    if (options?.autoPlayAudio) {
-      setAutoPlayAudio(true);
-    }
+    setAutoPlayAudio(false); // No audio on demo launch!
     try {
       const res = await ApiService.demoLogin();
       setUser(res.user);
@@ -158,7 +163,7 @@ export default function App() {
     setIsLoading(true);
     try {
       const res = await ApiService.simulateWhatIf({ product_name: product, price });
-      handleSimulationReady(res);
+      handleSimulationReady(res, { triggeredByUserQuestion: true });
     } catch (e) {
       console.error(e);
     } finally {
@@ -184,6 +189,7 @@ export default function App() {
       <LoginPage
         onLoginSuccess={handleLoginSuccess}
         onInstantDemo={handleInstantDemo}
+        onBackToLanding={() => setCurrentView('landing')}
       />
     );
   }
@@ -200,6 +206,7 @@ export default function App() {
         onResetDemo={handleResetDemo}
         onOpenTwin={() => setIsDigitalTwinOpen(true)}
         onOpenQuickTwin={() => setIsQuickTwinOpen(true)}
+        onOpenLogin={() => setCurrentView('login')}
         onLogout={() => setCurrentView('landing')}
       />
 

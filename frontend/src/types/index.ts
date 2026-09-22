@@ -212,6 +212,7 @@ export interface DecisionExplanation {
   recommendation_tradeoff: string;
   audio_script?: string;
   audio_script_hinglish?: string;
+  audio_script_telugu?: string;
   salary_day_timing?: {
     days_to_salary: number;
     next_salary_date: string;

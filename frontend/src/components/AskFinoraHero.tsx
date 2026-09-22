@@ -6,7 +6,7 @@ import {
 import { ApiService } from '../services/api';
 
 interface AskFinoraHeroProps {
-  onSimulationReady: (result: any) => void;
+  onSimulationReady: (result: any, options?: { triggeredByUserQuestion?: boolean }) => void;
   isLoading: boolean;
   setIsLoading: (loading: boolean) => void;
 }
@@ -74,7 +74,7 @@ export const AskFinoraHero: React.FC<AskFinoraHeroProps> = ({
     setUploadStatus(null);
     try {
       const res = await ApiService.askCopilot(textToAsk);
-      onSimulationReady(res);
+      onSimulationReady(res, { triggeredByUserQuestion: true });
     } catch (e: any) {
       console.error("Inquiry error:", e);
       alert("AI decision analysis fallback triggered.");

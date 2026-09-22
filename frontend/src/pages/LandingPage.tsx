@@ -14,7 +14,9 @@ interface LandingPageProps {
 }
 
 export const LandingPage: React.FC<LandingPageProps> = ({
+  onStartApp: _onStartApp,
   onInstantDemo,
+  onOpenLogin,
   snapshot
 }) => {
   const { theme, toggleTheme } = useTheme();
@@ -42,7 +44,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
             </div>
           </div>
 
-          <div className="flex items-center space-x-3">
+          <div className="flex items-center space-x-2.5">
             {/* Theme Toggle Button */}
             <button
               onClick={toggleTheme}
@@ -57,13 +59,21 @@ export const LandingPage: React.FC<LandingPageProps> = ({
               )}
             </button>
 
-            {/* Single Header Action */}
+            {/* Prominent Login Button */}
             <button
-              onClick={() => onInstantDemo({ autoPlayAudio: true })}
-              className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shadow-sm flex items-center space-x-1.5 transition-colors cursor-pointer"
+              onClick={onOpenLogin}
+              className="px-3.5 py-1.5 rounded-xl border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-200 hover:text-indigo-600 dark:hover:text-indigo-400 font-bold text-xs hover:bg-slate-100 dark:hover:bg-slate-900 transition-colors cursor-pointer"
+            >
+              Log In
+            </button>
+
+            {/* Launch Demo Button (Without Auto-Play) */}
+            <button
+              onClick={() => onInstantDemo()}
+              className="px-4 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs shadow-sm flex items-center space-x-1.5 transition-colors cursor-pointer"
             >
               <Zap className="w-3.5 h-3.5 fill-current" />
-              <span>Launch Demo (Aarav, 21)</span>
+              <span>Launch Demo</span>
             </button>
           </div>
         </div>
@@ -88,21 +98,23 @@ export const LandingPage: React.FC<LandingPageProps> = ({
             FINORA combines Gemini multimodal AI with a deterministic financial engine to simulate the exact future consequences of everyday financial decisions — before you make them.
           </p>
 
-          {/* ONE DOMINANT HERO ACTION BUTTON */}
-          <div className="flex flex-col items-center justify-center mb-12">
+          {/* HERO ACTION BUTTONS: DEMO & LOGIN */}
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-3.5 mb-12">
             <button
-              onClick={() => onInstantDemo({ autoPlayAudio: true })}
-              className="w-full sm:w-auto px-10 py-4 rounded-2xl bg-indigo-600 hover:bg-indigo-500 text-white font-black text-base shadow-xl flex items-center justify-center space-x-3 transition-all transform hover:-translate-y-0.5 cursor-pointer ring-4 ring-indigo-600/20"
+              onClick={() => onInstantDemo()}
+              className="w-full sm:w-auto px-8 py-3.5 rounded-2xl bg-indigo-600 hover:bg-indigo-500 text-white font-black text-sm sm:text-base shadow-xl flex items-center justify-center space-x-2.5 transition-all transform hover:-translate-y-0.5 cursor-pointer ring-4 ring-indigo-600/20"
             >
-              <Zap className="w-5 h-5 fill-current text-amber-300" />
-              <span>Launch Instant Decision Demo & Auto-Play Audio</span>
-              <ArrowRight className="w-5 h-5 ml-1" />
+              <Zap className="w-4 h-4 fill-current text-amber-300" />
+              <span>Explore Decision Studio</span>
+              <ArrowRight className="w-4 h-4 ml-1" />
             </button>
-            <p className="text-xs text-slate-500 dark:text-slate-400 mt-2.5 font-medium flex items-center space-x-1.5">
-              <span>⚡ Pre-loads canonical case:</span>
-              <span className="text-indigo-600 dark:text-indigo-400 font-bold">"Can I buy a ₹65k laptop on EMI?"</span>
-              <span>→ Streams 5 scenarios & speaks verdict</span>
-            </p>
+
+            <button
+              onClick={onOpenLogin}
+              className="w-full sm:w-auto px-7 py-3.5 rounded-2xl bg-white dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-800 dark:text-slate-100 font-bold text-sm sm:text-base border border-slate-300 dark:border-slate-700 shadow-sm flex items-center justify-center space-x-2 transition-all cursor-pointer"
+            >
+              <span>Sign In / Create Account</span>
+            </button>
           </div>
         </div>
 
@@ -217,13 +229,22 @@ export const LandingPage: React.FC<LandingPageProps> = ({
             “Most finance apps tell you where your money went. FINORA helps you understand what happens if you spend it.”
           </p>
 
-          <button
-            onClick={() => onInstantDemo()}
-            className="px-8 py-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-sm shadow-sm inline-flex items-center space-x-2 transition-colors cursor-pointer"
-          >
-            <span>Launch Hackathon Demo Experience</span>
-            <ArrowRight className="w-4 h-4" />
-          </button>
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
+            <button
+              onClick={() => onInstantDemo()}
+              className="w-full sm:w-auto px-7 py-3 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-sm shadow-sm inline-flex items-center justify-center space-x-2 transition-colors cursor-pointer"
+            >
+              <Zap className="w-4 h-4 fill-current text-amber-300" />
+              <span>Launch Demo (Aarav, 21)</span>
+              <ArrowRight className="w-4 h-4" />
+            </button>
+            <button
+              onClick={onOpenLogin}
+              className="w-full sm:w-auto px-7 py-3 rounded-xl bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800 font-bold text-sm shadow-sm inline-flex items-center justify-center space-x-2 transition-colors cursor-pointer"
+            >
+              <span>Sign In / Create Account</span>
+            </button>
+          </div>
         </div>
       </section>
     </div>

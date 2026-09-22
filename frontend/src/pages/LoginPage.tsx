@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { 
   Sparkles, Lock, Mail, User as UserIcon, ShieldCheck, 
-  ArrowRight, Fingerprint, Eye, EyeOff, Sun, Moon
+  ArrowRight, ArrowLeft, Fingerprint, Eye, EyeOff, Sun, Moon
 } from 'lucide-react';
 import { ApiService } from '../services/api';
 import { User } from '../types';
@@ -10,9 +10,10 @@ import { useTheme } from '../context/ThemeContext';
 interface LoginPageProps {
   onLoginSuccess: (user: User, token: string) => void;
   onInstantDemo: () => void;
+  onBackToLanding?: () => void;
 }
 
-export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess, onInstantDemo }) => {
+export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess, onInstantDemo, onBackToLanding }) => {
   const { theme, toggleTheme } = useTheme();
   const [isSignUp, setIsSignUp] = useState(false);
   const [email, setEmail] = useState('aarav@finora.in');
@@ -61,6 +62,16 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess, onInstantD
         {/* Left Hero Brand Panel (5 cols) */}
         <div className="lg:col-span-5 p-8 sm:p-10 bg-slate-50 dark:bg-slate-950 border-b lg:border-b-0 lg:border-r border-slate-200 dark:border-slate-800 flex flex-col justify-between relative">
           <div>
+            {onBackToLanding && (
+              <button
+                onClick={onBackToLanding}
+                className="inline-flex items-center space-x-1.5 text-xs font-bold text-slate-500 hover:text-indigo-600 dark:hover:text-indigo-400 mb-6 transition-colors cursor-pointer"
+              >
+                <ArrowLeft className="w-3.5 h-3.5" />
+                <span>← Back to Home</span>
+              </button>
+            )}
+
             <div className="flex items-center space-x-3 mb-8">
               <div className="w-10 h-10 rounded-xl bg-indigo-600 flex items-center justify-center shadow-sm">
                 <Sparkles className="w-5 h-5 text-white" />

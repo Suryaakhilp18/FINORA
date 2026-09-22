@@ -269,6 +269,13 @@ Return ONLY JSON.
             f"Sabse smart advice: 2 mahine ruko, salary surplus accumulate hone do aur tension-free khareedo!"
         )
 
+        audio_script_telugu = (
+            f"నమస్కారం! ఇది FINORA యొక్క ఆర్థిక డెసిషన్ డీబ్రీఫ్. మీ ₹{item_price:,.0f} ఖర్చుపై మా విశ్లేషణ. "
+            f"మీరు మొత్తం నగదు ఇప్పుడే చెల్లిస్తే, మీ అత్యవసర రక్షణ నిధి 3.9 నెలల నుండి {rem_buf} నెలలకు తగ్గిపోతుంది. "
+            f"ఈఎంఐ ఎంచుకోవడం లేదా 2 నెలలు వేచి ఉండడం ద్వారా మీ ఎమర్జెన్సీ ఫండ్ సురక్షితంగా ఉంటుంది. "
+            f"ఆలోచించి ఖర్చు చేయండి, మీ భవిష్యత్తును సురక్షితంగా ఉంచుకోండి!"
+        )
+
         # Salary Day Timing Intelligence (Assuming salary credited on 1st or 10th of month)
         salary_day_insight = {
             "days_to_salary": 9,
@@ -280,6 +287,7 @@ Return ONLY JSON.
         # Enrich with Cutting-Edge AI Behavioral & Deal Intelligence
         parsed_res["audio_script"] = audio_script
         parsed_res["audio_script_hinglish"] = audio_script_hinglish
+        parsed_res["audio_script_telugu"] = audio_script_telugu
         parsed_res["salary_day_timing"] = salary_day_insight
         parsed_res["impulse_score"] = impulse_score
         parsed_res["cognitive_biases"] = [
