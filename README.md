@@ -44,8 +44,13 @@ Young Indians entering the workforce (earning ₹25,000 to ₹80,000/month) face
 ---
 
 ### 2. 🧠 Next-Gen Behavioral & Cognitive AI
-- **🎙️ AI Audio Executive Debrief (Voice Debrief)**:
-  - Generates a concise spoken voice debrief using the Web Speech Synthesis API so users can listen to their financial verdict hands-free.
+- **🎙️ Multilingual Studio Human Voice Engine (Telugu, English, Hinglish)**:
+  - **Natural Human Speech**: Eliminates robotic machine synthesis. Uses studio-grade neural voice debriefs with natural cadence, pauses, and regional inflection:
+    - **తెలుగు (Telugu 🇮🇳)**: Clear, human-spoken regional verdict for local young professionals.
+    - **Hinglish 🇮🇳**: Natural conversational Hindi-English blend for relatable, native financial guidance.
+    - **English 🇬🇧**: Executive briefing clarity.
+  - **Dual-Layer Audio Engine**: Plays pre-rendered high-definition neural MP3s (`telugu_debrief.mp3`, `hinglish_debrief.mp3`, `english_debrief.mp3`) with live backend neural voice streaming (`/api/copilot/tts`) and graceful browser speech fallback.
+  - **Intentional Non-Intrusive Audio UX**: Completely silent on page open, landing page visit, and demo launch. Audio **only** plays when the user explicitly asks a question or manually clicks **"Listen Now / వినండి"**.
 - **🛡️ Behavioral "Regret Shield" & Impulse Risk Meter**:
   - Scores purchases from 0 to 100% on impulse probability.
   - Identifies cognitive spending biases: **Present Bias**, **Diderot Effect**, **Anchoring**, and **Loss Aversion**.
@@ -59,27 +64,34 @@ Young Indians entering the workforce (earning ₹25,000 to ₹80,000/month) face
 
 ---
 
-## 🏗️ Architecture
+## 🏗️ Architecture & Project Structure
 
 ```
 FINORA/
+├── api/                      # Vercel Serverless Gateway
+│   └── index.py              # WSGI/ASGI Entrypoint routing to FastAPI
 ├── backend/                  # Python FastAPI Backend
 │   ├── app/
 │   │   ├── ai/               # Gemini AI Service & Cognitive Prompting
-│   │   ├── api/              # REST Endpoints (Simulator, Copilot, Audit, Ingest)
+│   │   ├── api/              # REST Endpoints (Simulator, Copilot, Audit, Ingest, TTS)
+│   │   │   └── copilot.py    # Counterfactual copilot & /tts streaming endpoint
 │   │   ├── database/         # Data Models & In-Memory Store
 │   │   └── financial_engine/ # Deterministic Python Math (EMIs, Runways, GST)
 │   ├── .env.example          # Environment variables template
 │   └── requirements.txt      # Python dependencies
 │
 ├── frontend/                 # React 19 + Vite + TypeScript Frontend
+│   ├── public/
+│   │   └── audio/            # Studio Human Voice Debriefs (Telugu, English, Hinglish)
 │   ├── src/
-│   │   ├── components/       # Studio, What-If Simulator, Audio Debrief, Modals
+│   │   ├── components/       # Studio, What-If Simulator, Human Audio Player, Modals
 │   │   ├── pages/            # 3 Pillars (Studio, Finances, Goals, Landing, Login)
 │   │   ├── services/         # Typed API client
 │   │   └── types/            # TypeScript interfaces
 │   ├── tailwind.config.js    # Tailwind styling tokens (Dark & Light solid surfaces)
 │   └── package.json          # Node dependencies
+├── vercel.json               # Full-stack monorepo deployment configuration
+├── package.json              # Monorepo build orchestrator
 └── README.md
 ```
 
@@ -136,13 +148,24 @@ Frontend will be live at: `http://localhost:5173`
 
 ---
 
+### 4. Deploying to Vercel (Monorepo)
+
+FINORA is configured out-of-the-box for single-command full-stack Vercel deployment:
+- **Root Directory**: `.` (leave as root)
+- **Build Command**: `npm run build`
+- **Output Directory**: `frontend/dist`
+- **Install Command**: `npm install`
+- **Environment Variables**: Add `GEMINI_API_KEY` in Vercel Project Settings.
+
+---
+
 ## ⚡ 1-Click Judge Demo Mode
 To immediately test FINORA with realistic data:
-1. Open `http://localhost:5173/login`.
-2. Click **"⚡ Quick Demo (Aarav Sharma)"**.
-3. Loads a realistic 21-year-old software engineer in Bengaluru (Monthly income ₹35,000, Bank Balance ₹82,000, Rent ₹12,000).
-4. Run sample simulations: *"Can I buy a Sony WH-1000XM5 headphone for ₹29,990 on a 6-month EMI?"* or *"Can I afford an iPhone 16 for ₹79,900?"*.
-5. Listen to the **Audio Executive Debrief**, inspect the **Behavioral Bias Warning**, and test the **Counterfactual Negotiation Studio**!
+1. Navigate to the landing page and click **"⚡ Launch Live Demo"** or click **"Log In"** in the top navigation.
+2. Select **"⚡ Quick Demo (Aarav Sharma)"** to load a realistic profile of a 21-year-old software engineer in Bengaluru (Monthly income ₹35,000, Bank Balance ₹82,000, Rent ₹12,000).
+3. Type a spending question: *"Can I buy a Sony WH-1000XM5 headphone for ₹29,990 on a 6-month EMI?"* or *"Can I afford an iPhone 16 for ₹79,900?"* and press Enter.
+4. Switch to **తెలుగు (Telugu 🇮🇳)** or **Hinglish 🇮🇳** and click **"Listen Now / వినండి"** to experience the human voice debrief!
+5. Inspect the **Behavioral Bias Warning**, **48-Hour Cooling-Off Lock**, and test the **Counterfactual Negotiation Studio**!
 
 ---
 
