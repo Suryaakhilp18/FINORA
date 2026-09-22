@@ -12,7 +12,7 @@ import {
   getFallbackSimulation
 } from './fallbackData';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+const API_BASE_URL = import.meta.env.VITE_API_URL ?? (import.meta.env.PROD ? '' : 'http://localhost:8000');
 
 export class ApiService {
   private static getHeaders() {
