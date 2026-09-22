@@ -13,6 +13,7 @@ interface NavbarProps {
   snapshot: FinancialSnapshot | null;
   onResetDemo: () => void;
   onOpenTwin: () => void;
+  onOpenQuickTwin?: () => void;
   onLogout: () => void;
 }
 
@@ -23,6 +24,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   snapshot: _snapshot,
   onResetDemo,
   onOpenTwin,
+  onOpenQuickTwin,
   onLogout
 }) => {
   const { theme, toggleTheme } = useTheme();
@@ -97,6 +99,16 @@ export const Navbar: React.FC<NavbarProps> = ({
 
           {/* Right Action Tools */}
           <div className="flex items-center space-x-2.5">
+            {/* Quick 30s Twin Setup Button */}
+            {onOpenQuickTwin && (
+              <button
+                onClick={onOpenQuickTwin}
+                className="hidden sm:flex items-center space-x-1.5 px-3 py-1.5 rounded-lg bg-indigo-50 dark:bg-indigo-950/40 border border-indigo-200 dark:border-indigo-800 text-indigo-700 dark:text-indigo-300 text-xs font-semibold hover:bg-indigo-100 transition-colors"
+                title="Open 30-second 4-slider Digital Twin setup"
+              >
+                <span>⚡ 30s Setup</span>
+              </button>
+            )}
             {/* Theme Toggle Button */}
             <button
               onClick={toggleTheme}

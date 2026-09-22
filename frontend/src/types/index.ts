@@ -129,6 +129,80 @@ export interface CognitiveBias {
   mitigation: string;
 }
 
+export interface FinoraScore {
+  score: number;
+  verdict: 'YES' | 'YES, BUT' | 'NOT NOW';
+  verdict_badge: string;
+  color: 'emerald' | 'amber' | 'rose';
+  one_liner: string;
+  breakdown: {
+    liquidity_points: number;
+    debt_headroom_points: number;
+    goal_protection_points: number;
+  };
+  post_buffer_months: number;
+  baseline_buffer_months: number;
+  formulas: Record<string, string>;
+}
+
+export interface NoCostEmiScheduleItem {
+  month: number;
+  emi: number;
+  interest_component: number;
+  gst_18pct: number;
+  total_outflow: number;
+}
+
+export interface NoCostEmiAnalysis {
+  advertised_emi: number;
+  tenure_months: number;
+  true_effective_apr: number;
+  processing_fee_with_gst: number;
+  total_gst_on_interest: number;
+  lost_upfront_cash_discount: number;
+  total_hidden_cost: number;
+  real_total_paid: number;
+  monthly_schedule: NoCostEmiScheduleItem[];
+  verdict_summary: string;
+  formula_explanation: string;
+}
+
+export interface MonteCarloPercentiles {
+  p10: number[];
+  p50: number[];
+  p90: number[];
+}
+
+export interface MonteCarloResult {
+  num_runs: number;
+  safety_threshold: number;
+  prob_cushion_above_20k_without: number;
+  prob_cushion_above_20k_with: number;
+  headline: string;
+  labels: string[];
+  without_purchase: MonteCarloPercentiles;
+  with_purchase: MonteCarloPercentiles;
+  methodology: string;
+}
+
+export interface ReasoningStep {
+  step: number;
+  tool: string;
+  status: string;
+  detail: string;
+}
+
+export interface HallucinationGuard {
+  total_extracted_metrics: number;
+  verified_count: number;
+  unverified_count: number;
+  accuracy_rate: number;
+  hallucination_free: boolean;
+  badge: string;
+  verified_items: string[];
+  unverified_items: string[];
+}
+
 export interface DecisionExplanation {
   verdict_headline: string;
   what_happened: string;
@@ -137,6 +211,13 @@ export interface DecisionExplanation {
   what_changes_the_result: string[];
   recommendation_tradeoff: string;
   audio_script?: string;
+  audio_script_hinglish?: string;
+  salary_day_timing?: {
+    days_to_salary: number;
+    next_salary_date: string;
+    timing_recommendation: string;
+    post_salary_cushion_months: number;
+  };
   impulse_score?: number;
   cognitive_biases?: CognitiveBias[];
   cooling_off_advice?: string;
@@ -155,6 +236,22 @@ export interface NegotiationResponse {
   notes: string[];
 }
 
+export interface FutureSelfResponse {
+  future_age: number;
+  projected_portfolio_normal: number;
+  projected_portfolio_with_purchase: number;
+  opportunity_cost_at_future_age: number;
+  dialogue: string;
+  key_takeaway: string;
+}
+
+export interface NegotiationScriptResponse {
+  topic: string;
+  title: string;
+  script: string;
+  advice: string;
+}
+
 export interface WhatIfResponse {
   product_name: string;
   price: number;
@@ -170,6 +267,11 @@ export interface WhatIfResponse {
   scenarios: ScenarioResult[];
   timeline: TimelinePoint[];
   explanation: DecisionExplanation;
+  finora_score?: FinoraScore;
+  nocost_emi_analysis?: NoCostEmiAnalysis;
+  monte_carlo?: MonteCarloResult;
+  reasoning_trace?: ReasoningStep[];
+  hallucination_guard?: HallucinationGuard;
   data_completeness: string;
 }
 

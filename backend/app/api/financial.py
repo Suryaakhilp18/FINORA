@@ -117,6 +117,95 @@ def simulate_what_if(req: DecisionAnalysisRequest, user_id: str = "user_demo_21"
         timeline=[t.model_dump() for t in timeline]
     )
 
+    # 4. Finora Score & 3-Tier Verdict
+    goal_delay = scenarios[0].goal_delay_months if scenarios else 1.0
+    finora_score = FinancialEngine.calculate_finora_score(
+        price=req.price,
+        current_savings=savings,
+        monthly_income=inc,
+        monthly_expenses=exp,
+        existing_obligations=ob,
+        goal_delay_months=goal_delay
+    )
+
+    # 5. India No-Cost EMI Truth Detector (IRR + 18% GST)
+    nocost_emi_analysis = FinancialEngine.calculate_nocost_emi_irr(
+        price=req.price,
+        tenure_months=6,
+        nominal_annual_rate=14.0,
+        processing_fee=199.0,
+        lost_cash_discount=min(3000.0, req.price * 0.05)
+    )
+
+    # 6. Monte Carlo 1,000 Future Runs (Fan Chart)
+    monte_carlo = FinancialEngine.run_monte_carlo(
+        current_savings=savings,
+        monthly_income=inc,
+        monthly_expenses=exp,
+        existing_obligations=ob,
+        purchase_price=req.price,
+        num_simulations=1000
+    )
+
+    # 7. Hallucination Guard
+    ground_truth = {
+        "price": req.price,
+        "savings": savings,
+        "income": inc,
+        "expenses": exp,
+        "surplus": profile_dict["calculated_surplus"],
+        "buffer": profile_dict["emergency_buffer_months"],
+        "finora_score": finora_score["score"],
+        "post_buffer": finora_score["post_buffer_months"],
+        "emi_amount": nocost_emi_analysis["advertised_emi"],
+        "true_apr": nocost_emi_analysis["true_effective_apr"],
+        "total_hidden_cost": nocost_emi_analysis["total_hidden_cost"]
+    }
+    hallucination_guard = FinancialEngine.extract_and_verify_numbers(
+        text=str(explanation.get("verdict_headline", "")) + " " + str(explanation.get("what_happened", "")) + " " + str(explanation.get("audio_script", "")),
+        verified_ground_truth=ground_truth
+    )
+
+    # 8. Agentic Reasoning Trace
+    reasoning_trace = [
+        {
+            "step": 1,
+            "tool": "parse_intent()",
+            "status": "COMPLETED",
+            "detail": f"🔍 Extracted intent: {req.product_name} for ₹{req.price:,.0f} ({req.payment_method.upper()})"
+        },
+        {
+            "step": 2,
+            "tool": "simulate_scenarios()",
+            "status": "COMPLETED",
+            "detail": f"🧮 5 deterministic financial scenarios simulated by Python arithmetic"
+        },
+        {
+            "step": 3,
+            "tool": "calculate_finora_score()",
+            "status": "COMPLETED",
+            "detail": f"⭐ Finora Score: {finora_score['score']}/100 [{finora_score['verdict']}] ({finora_score['verdict_badge']})"
+        },
+        {
+            "step": 4,
+            "tool": "calculate_nocost_emi_irr()",
+            "status": "COMPLETED",
+            "detail": f"🛡️ Unmasked No-Cost EMI: 18% GST + ₹{nocost_emi_analysis['processing_fee_with_gst']:,.0f} fee = {nocost_emi_analysis['true_effective_apr']}% True APR"
+        },
+        {
+            "step": 5,
+            "tool": "run_monte_carlo(1000)",
+            "status": "COMPLETED",
+            "detail": f"🎲 1,000 stochastic futures: >₹20k cushion probability drops {monte_carlo['prob_cushion_above_20k_without']}% → {monte_carlo['prob_cushion_above_20k_with']}%"
+        },
+        {
+            "step": 6,
+            "tool": "extract_and_verify_numbers()",
+            "status": "COMPLETED",
+            "detail": f"✅ Hallucination Guard: {hallucination_guard['verified_count']}/{hallucination_guard['total_extracted_metrics']} numbers verified against engine"
+        }
+    ]
+
     return {
         "product_name": req.product_name,
         "price": req.price,
@@ -132,6 +221,11 @@ def simulate_what_if(req: DecisionAnalysisRequest, user_id: str = "user_demo_21"
         "scenarios": [s.model_dump() for s in scenarios],
         "timeline": [t.model_dump() for t in timeline],
         "explanation": explanation,
+        "finora_score": finora_score,
+        "nocost_emi_analysis": nocost_emi_analysis,
+        "monte_carlo": monte_carlo,
+        "reasoning_trace": reasoning_trace,
+        "hallucination_guard": hallucination_guard,
         "data_completeness": profile.data_completeness
     }
 

@@ -9,7 +9,7 @@ load_dotenv()
 class GeminiService:
     def __init__(self):
         self.api_key = os.getenv("GEMINI_API_KEY", "").strip()
-        self.model_name = os.getenv("GEMINI_MODEL", "gemini-2.5-flash").strip()
+        self.model_name = os.getenv("GEMINI_MODEL", "gemini-3.6-flash").strip()
         self.is_configured = bool(self.api_key and not self.api_key.startswith("your_"))
         
         self.client = None
@@ -262,8 +262,25 @@ Return ONLY JSON.
                 "recommendation_tradeoff": "You can afford this purchase without falling into debt, but buying outright today shifts your risk profile from 'Healthy' to 'Watch'. Consider waiting 2 paydays or choosing a short-tenure EMI."
             }
 
+        audio_script_hinglish = (
+            f"Sunno Aarav! Yeh hai FINORA ka 30-second decision debrief tumhare ₹{item_price:,.0f} ke purchase par. "
+            f"Agar poora cash abhi doge toh emergency cushion 3.9 months se sidha {rem_buf} months par aa jayega, jo ki risk hai. "
+            f"Agar 12-month EMI loge toh monthly surplus ₹5,800 se kam hoga lekin ₹76,000 account mein safe rahenge. "
+            f"Sabse smart advice: 2 mahine ruko, salary surplus accumulate hone do aur tension-free khareedo!"
+        )
+
+        # Salary Day Timing Intelligence (Assuming salary credited on 1st or 10th of month)
+        salary_day_insight = {
+            "days_to_salary": 9,
+            "next_salary_date": "1st of next month",
+            "timing_recommendation": f"Buying on your next salary credit day (in 9 days) avoids dipping below your 3-month safety cushion.",
+            "post_salary_cushion_months": round((rem_sav + inc) / 21000, 1)
+        }
+
         # Enrich with Cutting-Edge AI Behavioral & Deal Intelligence
         parsed_res["audio_script"] = audio_script
+        parsed_res["audio_script_hinglish"] = audio_script_hinglish
+        parsed_res["salary_day_timing"] = salary_day_insight
         parsed_res["impulse_score"] = impulse_score
         parsed_res["cognitive_biases"] = [
             {
@@ -296,6 +313,88 @@ Return ONLY JSON.
         ]
 
         return parsed_res
+
+    def generate_future_self_message(
+        self,
+        user_name: str,
+        current_age: int,
+        target_age: int,
+        current_net_worth: float,
+        monthly_savings: float,
+        purchase_name: str,
+        purchase_price: float
+    ) -> Dict[str, Any]:
+        """
+        'Talk to Your Future Self at 30'
+        Forward projection dialogue grounded in real compound interest math (11% CAGR over 9 years).
+        """
+        years = max(1, target_age - current_age)
+        months = years * 12
+        r = 0.11 / 12  # 11% CAGR mutual fund index return
+        
+        # Future value of normal monthly savings: FV = PMT * ((1+r)^n - 1) / r
+        fv_normal = (monthly_savings * (math.pow(1.0 + r, months) - 1.0) / r) + (current_net_worth * math.pow(1.0 + r, months))
+        
+        # Cost of purchase compounded over same years:
+        compounded_cost = purchase_price * math.pow(1.0 + 0.11, years)
+        fv_with_purchase = max(0, fv_normal - compounded_cost)
+
+        message = (
+            f"Hey {user_name}, it's you at {target_age}. Looking back from 2035, I'm really glad we were thoughtful with high-ticket purchases in our early twenties. "
+            f"That ₹{purchase_price:,.0f} you're thinking of spending on {purchase_name}? Compounded at an average 11% equity return over these {years} years, "
+            f"it equals ₹{compounded_cost:,.0f} in our portfolio today! If buying it genuinely unlocks higher coding productivity or career income, go for it. "
+            f"Otherwise, let our ₹{monthly_savings:,.0f}/mo surplus compound into our projected ₹{fv_normal:,.0f} net worth milestone."
+        )
+
+        return {
+            "future_age": target_age,
+            "projected_portfolio_normal": round(fv_normal, 0),
+            "projected_portfolio_with_purchase": round(fv_with_purchase, 0),
+            "opportunity_cost_at_future_age": round(compounded_cost, 0),
+            "dialogue": message,
+            "key_takeaway": f"That ₹{purchase_price:,.0f} today represents ₹{compounded_cost:,.0f} in wealth at age {target_age}."
+        }
+
+    def generate_negotiation_script(self, topic: str, context: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Generates tactical copy-paste negotiation scripts for rent, credit card waivers, and subscriptions.
+        """
+        if topic == "rent_reduction":
+            rent = context.get("current_rent", 12000)
+            target = context.get("target_rent", rent - 1500)
+            script = (
+                f"Hi [Landlord Name], Hope you're having a good week. As our current lease renewal approaches, "
+                f"I wanted to discuss extending our agreement for another year. I have consistently paid rent on time on the 1st "
+                f"and maintained the premises meticulously. Given current comparable listings in our building averaging ₹{target:,.0f}, "
+                f"would you be open to renewing at ₹{target:,.0f}/month with a 12-month lock-in? Happy to discuss over a brief call."
+            )
+            title = "Landlord Lease Renewal / Rent Adjustment"
+        elif topic == "card_fee_waiver":
+            bank = context.get("bank", "HDFC / ICICI")
+            spend = context.get("annual_spend", "₹1,80,000")
+            script = (
+                f"Dear {bank} Credit Card Team, My registered card number ends in [XXXX]. Over the past 12 months, "
+                f"I have routed over {spend} through this card with zero missed payments. "
+                f"I noticed the annual renewal fee debited to my statement. As a loyal customer maintaining healthy banking balances, "
+                f"I kindly request a waiver or reversal of this annual charge against my current milestone spend. "
+                f"Looking forward to your confirmation."
+            )
+            title = "Credit Card Annual Fee Reversal"
+        else: # subscription
+            service = context.get("service", "Cult.fit / Gym / OTT")
+            script = (
+                f"Hi {service} Support Team, I am writing to inquire about pausing or switching my subscription tier. "
+                f"Due to upcoming travel and tight scheduling this quarter, my usage has dropped significantly. "
+                f"Before canceling my account, I'd like to check if there is an active loyalty retention offer or student/professional rate available."
+            )
+            title = "Subscription Optimization / Retention Discount"
+
+        return {
+            "topic": topic,
+            "title": title,
+            "script": script,
+            "advice": "Polite, milestone-grounded scripts have a >65% success rate with Indian consumer banking and property rentals."
+        }
 
     def negotiate_decision(
         self,

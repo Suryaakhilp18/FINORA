@@ -19,6 +19,7 @@ import { FinancialHealthOverview } from './components/FinancialHealthOverview';
 import { AskFinoraHero } from './components/AskFinoraHero';
 import { WhatIfSimulator } from './components/WhatIfSimulator';
 import { DigitalTwinModal } from './components/DigitalTwinModal';
+import { QuickOnboardingModal } from './components/QuickOnboardingModal';
 
 // Pages
 import { LandingPage } from './pages/LandingPage';
@@ -44,12 +45,44 @@ export default function App() {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [_insights, setInsights] = useState<AIInsight[]>([]);
   const [isDigitalTwinOpen, setIsDigitalTwinOpen] = useState<boolean>(false);
+  const [isQuickTwinOpen, setIsQuickTwinOpen] = useState<boolean>(false);
 
   // Simulation State
   const [activeSimulation, setActiveSimulation] = useState<WhatIfResponse | null>(null);
   const [simulatingProduct, setSimulatingProduct] = useState<string>('MacBook Air M3 Laptop');
   const [simulatingPrice, setSimulatingPrice] = useState<number>(65000);
   const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [autoPlayAudio, setAutoPlayAudio] = useState<boolean>(false);
+
+  const handleSimulationReady = (res: any) => {
+    const simResult: WhatIfResponse = {
+      product_name: res.parsed_intent?.product || res.product_name || 'Purchase Item',
+      price: res.parsed_intent?.amount || res.price || 65000,
+      payment_method: res.parsed_intent?.financing_preference || 'cash',
+      baseline_context: res.financial_context || res.baseline_context || {
+        current_liquid_savings: snapshot?.savings || 82000,
+        monthly_income: snapshot?.monthly_income || 35000,
+        monthly_expenses: snapshot?.monthly_expenses || 18000,
+        upcoming_obligations: snapshot?.upcoming_obligations || 3000,
+        monthly_surplus: snapshot?.monthly_surplus || 14000,
+        emergency_buffer_months: snapshot?.emergency_buffer_months || 3.9
+      },
+      scenarios: res.deterministic_scenarios || res.scenarios || [],
+      timeline: res.timeline || [],
+      explanation: res.explanation,
+      finora_score: res.finora_score,
+      nocost_emi_analysis: res.nocost_emi_analysis,
+      monte_carlo: res.monte_carlo,
+      reasoning_trace: res.reasoning_trace,
+      hallucination_guard: res.hallucination_guard,
+      data_completeness: res.data_completeness || 'High'
+    };
+
+    setActiveSimulation(simResult);
+    setSimulatingProduct(simResult.product_name);
+    setSimulatingPrice(simResult.price);
+    setStudioMode('simulator');
+  };
 
   // Initialize data
   const loadUserData = async (userId: string = 'user_demo_21') => {
@@ -74,7 +107,7 @@ export default function App() {
           price: 65000,
           query: 'Can I afford a ₹65,000 laptop?'
         }, userId);
-        setActiveSimulation(initialSim);
+        handleSimulationReady(initialSim);
       }
     } catch (err) {
       console.error('Error loading financial state:', err);
@@ -85,8 +118,11 @@ export default function App() {
     loadUserData();
   }, []);
 
-  const handleInstantDemo = async () => {
+  const handleInstantDemo = async (options?: { autoPlayAudio?: boolean }) => {
     setIsLoading(true);
+    if (options?.autoPlayAudio) {
+      setAutoPlayAudio(true);
+    }
     try {
       const res = await ApiService.demoLogin();
       setUser(res.user);
@@ -118,31 +154,6 @@ export default function App() {
     confetti({ particleCount: 40, spread: 50 });
   };
 
-  const handleSimulationReady = (res: any) => {
-    const simResult: WhatIfResponse = {
-      product_name: res.parsed_intent?.product || res.product_name || 'Purchase Item',
-      price: res.parsed_intent?.amount || res.price || 65000,
-      payment_method: res.parsed_intent?.financing_preference || 'cash',
-      baseline_context: res.financial_context || res.baseline_context || {
-        current_liquid_savings: snapshot?.savings || 82000,
-        monthly_income: snapshot?.monthly_income || 35000,
-        monthly_expenses: snapshot?.monthly_expenses || 18000,
-        upcoming_obligations: snapshot?.upcoming_obligations || 3000,
-        monthly_surplus: snapshot?.monthly_surplus || 14000,
-        emergency_buffer_months: snapshot?.emergency_buffer_months || 3.9
-      },
-      scenarios: res.deterministic_scenarios || res.scenarios || [],
-      timeline: res.timeline || [],
-      explanation: res.explanation,
-      data_completeness: res.data_completeness || 'High'
-    };
-
-    setActiveSimulation(simResult);
-    setSimulatingProduct(simResult.product_name);
-    setSimulatingPrice(simResult.price);
-    setStudioMode('simulator');
-  };
-
   const handleSimulateNew = async (product: string, price: number) => {
     setIsLoading(true);
     try {
@@ -162,6 +173,7 @@ export default function App() {
         onStartApp={() => setCurrentView('login')}
         onInstantDemo={handleInstantDemo}
         onOpenLogin={() => setCurrentView('login')}
+        snapshot={snapshot}
       />
     );
   }
@@ -187,6 +199,7 @@ export default function App() {
         snapshot={snapshot}
         onResetDemo={handleResetDemo}
         onOpenTwin={() => setIsDigitalTwinOpen(true)}
+        onOpenQuickTwin={() => setIsQuickTwinOpen(true)}
         onLogout={() => setCurrentView('landing')}
       />
 
@@ -307,10 +320,17 @@ export default function App() {
                 scenarios={activeSimulation.scenarios}
                 explanation={activeSimulation.explanation}
                 timeline={activeSimulation.timeline}
+                finoraScore={activeSimulation.finora_score}
+                nocostEmiAnalysis={activeSimulation.nocost_emi_analysis}
+                monteCarlo={activeSimulation.monte_carlo}
+                reasoningTrace={activeSimulation.reasoning_trace}
+                hallucinationGuard={activeSimulation.hallucination_guard}
+                baselineContext={activeSimulation.baseline_context}
                 productName={simulatingProduct}
                 price={simulatingPrice}
                 onSimulateNew={handleSimulateNew}
                 isLoading={isLoading}
+                autoPlayAudio={autoPlayAudio}
               />
             )}
 
@@ -386,6 +406,20 @@ export default function App() {
           isOpen={isDigitalTwinOpen}
           onClose={() => setIsDigitalTwinOpen(false)}
           profile={profile}
+          onSaveProfile={async (updated) => {
+            setProfile(updated);
+            await ApiService.updateProfile(updated);
+            await loadUserData(updated.user_id);
+          }}
+        />
+      )}
+
+      {/* Quick 30-second Digital Twin Modal */}
+      {profile && (
+        <QuickOnboardingModal
+          isOpen={isQuickTwinOpen}
+          onClose={() => setIsQuickTwinOpen(false)}
+          currentProfile={profile}
           onSaveProfile={async (updated) => {
             setProfile(updated);
             await ApiService.updateProfile(updated);

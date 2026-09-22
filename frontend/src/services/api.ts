@@ -199,4 +199,39 @@ export class ApiService {
     if (!res.ok) throw new Error('Negotiation failed');
     return res.json();
   }
+
+  // Talk to Your Future Self at 30
+  static async getFutureSelfDialogue(
+    productName: string,
+    price: number,
+    targetAge: number = 30,
+    userId: string = 'user_demo_21'
+  ): Promise<any> {
+    const res = await fetch(`${API_BASE_URL}/api/copilot/future-self`, {
+      method: 'POST',
+      headers: this.getHeaders(),
+      body: JSON.stringify({
+        product_name: productName,
+        price: price,
+        target_age: targetAge,
+        user_id: userId
+      }),
+    });
+    if (!res.ok) throw new Error('Future self calculation failed');
+    return res.json();
+  }
+
+  // Tactical Negotiation Scripts
+  static async getNegotiationScript(topic: string, context?: any): Promise<any> {
+    const res = await fetch(`${API_BASE_URL}/api/copilot/negotiation-script`, {
+      method: 'POST',
+      headers: this.getHeaders(),
+      body: JSON.stringify({
+        topic,
+        context
+      }),
+    });
+    if (!res.ok) throw new Error('Negotiation script generation failed');
+    return res.json();
+  }
 }

@@ -54,5 +54,41 @@ class TestFinancialEngine(unittest.TestCase):
         self.assertEqual(res["shock_type"], "income_drop_20")
         self.assertTrue(len(res["curve"]) > 0)
 
+    def test_nocost_emi_irr(self):
+        res = FinancialEngine.calculate_nocost_emi_irr(60000, 6, 14.0, 199.0, 2000.0)
+        self.assertGreater(res["true_effective_apr"], 0.0)
+        self.assertGreater(res["total_hidden_cost"], 2000.0)
+        self.assertEqual(len(res["monthly_schedule"]), 6)
+        self.assertTrue("formula_explanation" in res)
+
+    def test_finora_score(self):
+        res = FinancialEngine.calculate_finora_score(
+            price=65000,
+            current_savings=82000,
+            monthly_income=35000,
+            monthly_expenses=18000,
+            existing_obligations=3000,
+            goal_delay_months=3.2
+        )
+        self.assertIn(res["verdict"], ["YES", "YES, BUT", "NOT NOW"])
+        self.assertGreaterEqual(res["score"], 0)
+        self.assertLessEqual(res["score"], 100)
+        self.assertTrue("formulas" in res)
+
+    def test_monte_carlo(self):
+        res = FinancialEngine.run_monte_carlo(82000, 35000, 18000, 3000, 65000, 100)
+        self.assertEqual(res["num_runs"], 100)
+        self.assertGreaterEqual(res["prob_cushion_above_20k_without"], 0.0)
+        self.assertLessEqual(res["prob_cushion_above_20k_without"], 100.0)
+        self.assertEqual(len(res["labels"]), 7)
+        self.assertEqual(len(res["without_purchase"]["p50"]), 7)
+
+    def test_hallucination_verifier(self):
+        truth = {"income": 35000, "savings": 82000, "cushion": 3.9, "emi": 5800}
+        text = "Your income is ₹35,000 with ₹82,000 savings. Emergency cushion is 3.9 months and EMI is ₹5,800."
+        res = FinancialEngine.extract_and_verify_numbers(text, truth)
+        self.assertEqual(res["verified_count"], 4)
+        self.assertTrue(res["hallucination_free"])
+
 if __name__ == "__main__":
     unittest.main()
