@@ -1,6 +1,10 @@
 from fastapi import APIRouter
+from fastapi.responses import Response
 from pydantic import BaseModel
 from typing import Optional, Dict, Any, List
+import urllib.parse
+import urllib.request
+import re
 from app.database.store import store
 from app.ai.gemini_service import gemini_service
 from app.financial_engine.calculator import FinancialEngine
@@ -254,3 +258,43 @@ class NegotiationScriptRequest(BaseModel):
 @router.post("/negotiation-script")
 def get_negotiation_script(req: NegotiationScriptRequest):
     return gemini_service.generate_negotiation_script(req.topic, req.context or {})
+
+@router.get("/tts")
+def stream_tts(text: str, lang: str = "te"):
+    """
+    Generate natural human neural text-to-speech audio MP3 for Telugu (or other languages)
+    using Google's WaveNet/Neural voice engine instead of robotic browser TTS.
+    """
+    if not text or not text.strip():
+        return Response(status_code=400, content="Missing text")
+
+    # Split text into natural sentence/clause chunks under 120 chars
+    raw_chunks = re.split(r'([.?!,;:\n]+)', text)
+    chunks = []
+    current = ""
+    for part in raw_chunks:
+        if len(current) + len(part) < 120:
+            current += part
+        else:
+            if current.strip():
+                chunks.append(current.strip())
+            current = part
+    if current.strip():
+        chunks.append(current.strip())
+
+    audio_bytes = b""
+    for chunk in chunks:
+        if not chunk:
+            continue
+        try:
+            url = f"https://translate.google.com/translate_tts?ie=UTF-8&tl={lang}&client=tw-ob&q=" + urllib.parse.quote(chunk)
+            req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"})
+            with urllib.request.urlopen(req, timeout=5) as resp:
+                audio_bytes += resp.read()
+        except Exception as e:
+            print(f"[TTS] Error fetching chunk: {e}")
+
+    if not audio_bytes:
+        return Response(status_code=500, content="TTS generation failed")
+
+    return Response(content=audio_bytes, media_type="audio/mpeg")

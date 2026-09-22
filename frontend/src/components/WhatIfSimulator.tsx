@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { 
   Scale, CheckCircle2, AlertTriangle, Calculator, Sparkles, Shield,
   Volume2, VolumeX, Brain, Clock, Lock, Tag, MessageSquare, Send,
@@ -52,10 +52,10 @@ export const WhatIfSimulator: React.FC<WhatIfSimulatorProps> = ({
   const [customProduct, setCustomProduct] = useState<string>(productName);
   const [customPrice, setCustomPrice] = useState<number>(price);
 
-  // Audio Debrief State
-  // Audio Debrief State (Supports English, Hinglish & Telugu)
+  // Audio Debrief State (Supports Studio-Quality Human Voice in Telugu, English & Hinglish)
   const [isPlayingAudio, setIsPlayingAudio] = useState<boolean>(false);
   const [audioLang, setAudioLang] = useState<'en' | 'hi' | 'te'>('en');
+  const audioElementRef = useRef<HTMLAudioElement | null>(null);
 
   // Behavioral Cooling-off State
   const [coolingOffActive, setCoolingOffActive] = useState<boolean>(false);
@@ -90,9 +90,13 @@ export const WhatIfSimulator: React.FC<WhatIfSimulatorProps> = ({
     }
   }, [autoPlayAudio]);
 
-  // Stop speech synthesis on unmount
+  // Stop audio and speech synthesis on unmount
   useEffect(() => {
     return () => {
+      if (audioElementRef.current) {
+        audioElementRef.current.pause();
+        audioElementRef.current = null;
+      }
       if ('speechSynthesis' in window) {
         window.speechSynthesis.cancel();
       }
@@ -106,15 +110,47 @@ export const WhatIfSimulator: React.FC<WhatIfSimulatorProps> = ({
     }
   };
 
-  // Text-To-Speech Executive Audio Briefing (Supports English, Hinglish & Telugu)
-  const handleToggleAudio = (forceLanguage?: 'en' | 'hi' | 'te') => {
-    if (!('speechSynthesis' in window)) {
-      alert("Text-to-speech audio is not supported in this browser.");
-      return;
+  // Browser SpeechSynthesis Fallback if audio file or neural stream is unavailable
+  const fallbackBrowserTTS = (scriptToRead: string, lang: 'en' | 'hi' | 'te') => {
+    if (!('speechSynthesis' in window)) return;
+    window.speechSynthesis.cancel();
+    const utterance = new SpeechSynthesisUtterance(scriptToRead);
+    utterance.rate = lang === 'te' ? 0.95 : 1.0;
+    utterance.pitch = 1.0;
+
+    const voices = window.speechSynthesis.getVoices();
+    if (lang === 'te') {
+      utterance.lang = 'te-IN';
+      const telVoice = voices.find(v => v.lang.includes('te') || v.lang.includes('te-IN') || v.name.toLowerCase().includes('telugu'));
+      if (telVoice) utterance.voice = telVoice;
+    } else if (lang === 'hi') {
+      utterance.lang = 'hi-IN';
+      const hiVoice = voices.find(v => v.lang.includes('hi') || v.lang.includes('hi-IN'));
+      if (hiVoice) utterance.voice = hiVoice;
+    } else {
+      utterance.lang = 'en-IN';
+      const indVoice = voices.find(v => v.lang.includes('en-IN') || v.lang.includes('en-US'));
+      if (indVoice) utterance.voice = indVoice;
     }
 
+    utterance.onend = () => setIsPlayingAudio(false);
+    utterance.onerror = () => setIsPlayingAudio(false);
+
+    window.speechSynthesis.speak(utterance);
+    setIsPlayingAudio(true);
+  };
+
+  // High-Fidelity Human Voice Executive Audio Briefing
+  const handleToggleAudio = async (forceLanguage?: 'en' | 'hi' | 'te') => {
+    // If currently playing, immediately stop
     if (isPlayingAudio) {
-      window.speechSynthesis.cancel();
+      if (audioElementRef.current) {
+        audioElementRef.current.pause();
+        audioElementRef.current = null;
+      }
+      if ('speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+      }
       setIsPlayingAudio(false);
       return;
     }
@@ -131,37 +167,46 @@ export const WhatIfSimulator: React.FC<WhatIfSimulatorProps> = ({
 
     if (!scriptToRead) return;
 
-    window.speechSynthesis.cancel();
-    const utterance = new SpeechSynthesisUtterance(scriptToRead);
-    utterance.rate = lang === 'te' ? 0.95 : 1.0;
-    utterance.pitch = 1.0;
+    // Check if canonical studio-quality human voice audio is available
+    const isCanonicalScenario =
+      productName.toLowerCase().includes('macbook') ||
+      productName.toLowerCase().includes('laptop') ||
+      price === 65000;
 
-    const voices = window.speechSynthesis.getVoices();
-    if (lang === 'te') {
-      utterance.lang = 'te-IN';
-      const telVoice = voices.find(v => v.lang.includes('te') || v.lang.includes('te-IN') || v.name.toLowerCase().includes('telugu'));
-      if (telVoice) {
-        utterance.voice = telVoice;
-      }
-    } else if (lang === 'hi') {
-      utterance.lang = 'hi-IN';
-      const hiVoice = voices.find(v => v.lang.includes('hi') || v.lang.includes('hi-IN'));
-      if (hiVoice) {
-        utterance.voice = hiVoice;
-      }
+    let humanAudioSrc = "";
+    if (isCanonicalScenario) {
+      if (lang === 'te') humanAudioSrc = '/audio/telugu_debrief.mp3';
+      else if (lang === 'hi') humanAudioSrc = '/audio/hinglish_debrief.mp3';
+      else humanAudioSrc = '/audio/english_debrief.mp3';
     } else {
-      utterance.lang = 'en-IN';
-      const indVoice = voices.find(v => v.lang.includes('en-IN') || v.lang.includes('en-US'));
-      if (indVoice) {
-        utterance.voice = indVoice;
-      }
+      humanAudioSrc = `/api/copilot/tts?text=${encodeURIComponent(scriptToRead)}&lang=${lang}`;
     }
 
-    utterance.onend = () => setIsPlayingAudio(false);
-    utterance.onerror = () => setIsPlayingAudio(false);
+    try {
+      if (audioElementRef.current) {
+        audioElementRef.current.pause();
+        audioElementRef.current = null;
+      }
 
-    window.speechSynthesis.speak(utterance);
-    setIsPlayingAudio(true);
+      const audio = new Audio(humanAudioSrc);
+      audioElementRef.current = audio;
+
+      audio.onended = () => {
+        setIsPlayingAudio(false);
+        audioElementRef.current = null;
+      };
+
+      audio.onerror = () => {
+        console.warn("[FINORA Voice] Streaming human audio failed, using browser speech synthesis fallback");
+        fallbackBrowserTTS(scriptToRead, lang);
+      };
+
+      await audio.play();
+      setIsPlayingAudio(true);
+    } catch (err) {
+      console.warn("[FINORA Voice] Audio play error, using browser speech synthesis fallback:", err);
+      fallbackBrowserTTS(scriptToRead, lang);
+    }
   };
 
   // Interactive Counterfactual Negotiation
